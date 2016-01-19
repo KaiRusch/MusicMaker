@@ -2,9 +2,63 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+
 char *musicBuffer;
 int totalTime = 0;
 
+typedef struct Note_Node
+{
+  int frequency;
+  struct Note_Node * next;
+} NoteNode;
+
+NoteNode *root = NULL;
+
+void add_note(int frequency)
+{
+  NoteNode *note = (NoteNode *)malloc(sizeof(NoteNode));
+  note->next = root;
+  note->frequency = frequency;
+  root = note;
+  return;
+};
+
+void delete_note(int frequency)
+{
+  if(root == NULL)
+    {
+      return;
+    }
+  else if(root->frequency == frequency)
+    {
+      NoteNode *tempPtr = root->next;
+      free(root);
+      root = tempPtr;
+      return;
+    }
+
+  NoteNode *currentNode = root;
+
+  while(currentNode != NULL)
+    {
+      if(currentNode->next == NULL)
+	{
+	  return;
+	}
+      else if(currentNode->next->frequency == frequency)
+	{
+	  NoteNode *tempPtr = currentNode->next->next;
+	  free(currentNode->next);
+	  currentNode->next = tempPtr;
+	  return;
+	}
+      else
+	{
+	  currentNode = currentNode->next;
+	}
+    }
+  return;
+}
 
 float deltaHeight(float amplitude, float frequency)
 {
@@ -16,89 +70,22 @@ int note(int time, float frequency, int amplitude)
   int preMod = (int)((float)time*deltaHeight(amplitude,frequency));
   return preMod%amplitude;
 }
-void pause(float length)
+
+void play(float length)
 {
   for(int time = 0; time < length*8000; time++)
     {
-      *(musicBuffer + totalTime) = 0;
-      totalTime++;
-    }
-}
-int c4(int time, float amplitude)
-{
-  note(time,261.63f,amplitude);
-}
-int bb4(int time, float amplitude)
-{
-  note(time,466.16f,amplitude);
-}
-int b4(int time, float amplitude)
-{
-  note(time,493.88f,amplitude);
-}
-int eb4(int time, float amplitude)
-{
-  note(time,311.13f,amplitude);
-}
-int e4(int time, float amplitude)
-{
-  note(time,329.63f,amplitude);
-}
-int gb4(int time, float amplitude)
-{
-  note(time,369.99f,amplitude);
-}
-int g4(int time, float amplitude)
-{
-  note(time,392.00f,amplitude);
-}
-int gs4(int time, float amplitude)
-{
-  note(time,415.3f,amplitude);
-}
-int a4(int time, float amplitude)
-{
-  note(time,440.00f,amplitude);
-}
-int c5(int time, float amplitude)
-{
-  note(time,523.25f,amplitude);
-}
-int cs5(int time, float amplitude)
-{
-  note(time,554.37f,amplitude);
-}
-int d5(int time, float amplitude)
-{
-  note(time,587.33f,amplitude);
-}
-int eb5(int time, float amplitude)
-{
-  note(time,622.25f,amplitude);
-}
-int e5(int time, float amplitude)
-{
-  note(time,659.25f,amplitude);
-}
-int f5(int time, float amplitude)
-{
-  note(time,698.46f,amplitude);
-}
-int gb5(int time, float amplitude)
-{
-  note(time,739.99f,amplitude);
-}
-int g5(int time, float amplitude)
-{
-  note(time,783.99f,amplitude);
-}
+      char amplitude = 0;
 
+      NoteNode *currentNode = root;
 
-void play_note(float length, int (*note)(int time, float amplitude))
-{
-  for(int time = 0; time < length*8000; time++)
-    {
-      *(musicBuffer + totalTime) = note(time,50.0f);
+      while(currentNode != NULL)
+	{
+	  amplitude += note(time,currentNode->frequency / 100, 20);
+	  currentNode = currentNode->next;
+	}
+      
+      *(musicBuffer + totalTime) = amplitude;
       totalTime++;
     }
 }
@@ -136,8 +123,12 @@ int main()
   *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
 
   musicBuffer = headerBuffer + 44;
+ 
+
+  /* INSERT MUSIC HERE */
 
   
+  /*  
   play_note(0.5,g4);
   pause(0.1);
   play_note(0.5,g4);
@@ -279,7 +270,7 @@ int main()
   pause(0.1);
   play_note(0.15,bb4);
   pause(0.1);
-  play_note(1,g4);
+  play_note(1,g4);*/
 
 
   FILE *musicFile =  fopen("out.wav","w");
