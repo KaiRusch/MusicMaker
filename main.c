@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 float deltaHeight(float amplitude, float frequency)
 {
@@ -99,7 +100,54 @@ void play_note(float length, int (*note)(int time, float amplitude))
 int main()
 {
 
-  play_note(0.5,g4);
+  int bytesOfMusic = 1000000;
+
+  char *headerBuffer = malloc((44 + bytesOfMusic)*sizeof(char));
+  headerBuffer[0] = 'R';
+  headerBuffer[1] = 'I';
+  headerBuffer[2] = 'F';
+  headerBuffer[3] = 'F';
+  *((uint32_t *) (headerBuffer + 4)) = 'W' *256 + 'E'; // INSERT SIZE HERE LATER
+  headerBuffer[8] = 'W';
+  headerBuffer[9] = 'A';
+  headerBuffer[10] = 'V';
+  headerBuffer[11] = 'E';
+  headerBuffer[12] = 'f';
+  headerBuffer[13] = 'm';
+  headerBuffer[14] = 't';
+  headerBuffer[15] = ' ';
+  *((uint32_t *) (headerBuffer + 16)) = 16;
+  *((uint16_t *) (headerBuffer + 20)) = 1;
+  *((uint16_t *) (headerBuffer + 22)) = 1;
+  *((uint32_t *) (headerBuffer + 24)) = 8000;
+  *((uint32_t *) (headerBuffer + 28)) = 8000;
+  *((uint16_t *) (headerBuffer + 32)) = 1;
+  *((uint16_t *) (headerBuffer + 34)) = 8;
+  headerBuffer[36] = 'd';
+  headerBuffer[37] = 'a';
+  headerBuffer[38] = 't';
+  headerBuffer[39] = 'a';
+  *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
+
+  for(int i = 0; i < bytesOfMusic; ++i)
+    {
+      *(headerBuffer + 44 + i) = c4(i,50) + e4(i,50) + g4(i,50);
+    }
+
+  FILE *musicFile =  fopen("out.wav","w");
+  fwrite(headerBuffer, sizeof(char), bytesOfMusic + 44, musicFile);
+  fclose(musicFile);
+
+  free(headerBuffer);
+
+
+
+
+
+
+
+
+/*  play_note(0.5,g4);
   pause(0.1);
   play_note(0.5,g4);
   pause(0.1);  
@@ -240,7 +288,7 @@ int main()
   pause(0.1);
   play_note(0.15,bb4);
   pause(0.1);
-  play_note(1,g4);
+  play_note(1,g4);*/
   
   return 0;
 }
