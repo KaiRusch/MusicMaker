@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+char *musicBuffer;
+int totalTime = 0;
+
+
 float deltaHeight(float amplitude, float frequency)
 {
   return amplitude/(8000.0f/frequency);
@@ -16,7 +20,8 @@ void pause(float length)
 {
   for(int time = 0; time < length*8000; time++)
     {
-      putchar(0);
+      *(musicBuffer + totalTime) = 0;
+      totalTime++;
     }
 }
 int c4(int time, float amplitude)
@@ -93,21 +98,22 @@ void play_note(float length, int (*note)(int time, float amplitude))
 {
   for(int time = 0; time < length*8000; time++)
     {
-      putchar(note(time,50.0f));
+      *(musicBuffer + totalTime) = note(time,50.0f);
+      totalTime++;
     }
 }
 
 int main()
 {
 
-  int bytesOfMusic = 1000000;
+  int bytesOfMusic = 8000*50;
 
   char *headerBuffer = malloc((44 + bytesOfMusic)*sizeof(char));
   headerBuffer[0] = 'R';
   headerBuffer[1] = 'I';
   headerBuffer[2] = 'F';
   headerBuffer[3] = 'F';
-  *((uint32_t *) (headerBuffer + 4)) = 'W' *256 + 'E'; // INSERT SIZE HERE LATER
+  *((uint32_t *) (headerBuffer + 4)) = 40 + bytesOfMusic; // INSERT SIZE HERE LATER
   headerBuffer[8] = 'W';
   headerBuffer[9] = 'A';
   headerBuffer[10] = 'V';
@@ -129,25 +135,10 @@ int main()
   headerBuffer[39] = 'a';
   *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
 
-  for(int i = 0; i < bytesOfMusic; ++i)
-    {
-      *(headerBuffer + 44 + i) = c4(i,50) + e4(i,50) + g4(i,50);
-    }
+  musicBuffer = headerBuffer + 44;
 
-  FILE *musicFile =  fopen("out.wav","w");
-  fwrite(headerBuffer, sizeof(char), bytesOfMusic + 44, musicFile);
-  fclose(musicFile);
-
-  free(headerBuffer);
-
-
-
-
-
-
-
-
-/*  play_note(0.5,g4);
+  
+  play_note(0.5,g4);
   pause(0.1);
   play_note(0.5,g4);
   pause(0.1);  
@@ -288,7 +279,14 @@ int main()
   pause(0.1);
   play_note(0.15,bb4);
   pause(0.1);
-  play_note(1,g4);*/
+  play_note(1,g4);
+
+
+  FILE *musicFile =  fopen("out.wav","w");
+  fwrite(headerBuffer, sizeof(char), bytesOfMusic + 44, musicFile);
+  fclose(musicFile);
+
+  free(headerBuffer);
   
   return 0;
 }
