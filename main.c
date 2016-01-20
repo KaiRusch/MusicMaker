@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
+#include <math.h>
+#include "notes.h"
 
 char *musicBuffer;
 int totalTime = 0;
@@ -22,6 +23,18 @@ void add_note(int frequency)
   root = note;
   return;
 };
+
+void clear()
+{
+  if(root != NULL)
+    {
+      NoteNode *tempPtr = root->next;
+      free(root);
+      root = tempPtr;
+      clear();
+      root = NULL;
+    }
+}
 
 void delete_note(int frequency)
 {
@@ -67,8 +80,7 @@ float deltaHeight(float amplitude, float frequency)
 
 int note(int time, float frequency, int amplitude)
 {
-  int preMod = (int)((float)time*deltaHeight(amplitude,frequency));
-  return preMod%amplitude;
+  return ((int)(deltaHeight(amplitude,frequency)*time))%amplitude;
 }
 
 void play(float length)
@@ -81,13 +93,77 @@ void play(float length)
 
       while(currentNode != NULL)
 	{
-	  amplitude += note(time,currentNode->frequency / 100, 20);
+	  amplitude += note(time,currentNode->frequency / 100, 30);
 	  currentNode = currentNode->next;
 	}
       
       *(musicBuffer + totalTime) = amplitude;
       totalTime++;
     }
+}
+
+int pause(float length)
+{
+  for(int time = 0; time < 8000*length; time++)
+    {
+      *(musicBuffer + totalTime) = 0;
+      totalTime++;
+    }
+}
+
+void aquarter_note()
+{
+  play(0.49);
+  pause(0.01);
+}
+
+void aeighth_note()
+{
+  play(0.25);
+  pause(0.01);
+}
+
+void asixteenth_note()
+{
+  play(0.115);
+  pause(0.01);
+}
+
+void half_note(int frequency)
+{
+  add_note(frequency);
+  play(0.99);
+  delete_note(frequency);
+  play(0.01);
+}
+
+void quarter_note(int frequency)
+{
+  add_note(frequency);
+  play(0.49);
+  delete_note(frequency);
+  play(0.01);
+}
+void eighth_note(int frequency)
+{
+  add_note(frequency);
+  play(0.24);
+  delete_note(frequency);
+  play(0.01);
+}
+void sixteenth_note(int frequency)
+{
+  add_note(frequency);
+  play(0.115);
+  delete_note(frequency);
+  play(0.01);
+}
+void dotted_eighth_note(int frequency)
+{
+  add_note(frequency);
+  play(0.365);
+  delete_note(frequency);
+  play(0.01);
 }
 
 int main()
@@ -123,154 +199,79 @@ int main()
   *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
 
   musicBuffer = headerBuffer + 44;
- 
+
 
   /* INSERT MUSIC HERE */
-
-  
-  /*  
-  play_note(0.5,g4);
-  pause(0.1);
-  play_note(0.5,g4);
-  pause(0.1);  
-  play_note(0.5,g4);
-  pause(0.1);
-  play_note(0.3,eb4);
-  pause(0.1);    
-  play_note(0.15,bb4);
-  pause(0.1);
-  
-  play_note(0.5,g4);
-  pause(0.1);  
-  play_note(0.3,eb4);
-  pause(0.1);    
-  play_note(0.15,bb4);
-  pause(0.1);      
-  play_note(1,g4);
-  pause(0.1);
-  
-  play_note(0.5,d5);
-  pause(0.1);      
-  play_note(0.5,d5);
-  pause(0.1);      
-  play_note(0.5,d5);
-  pause(0.1);
-  play_note(0.3,eb5);
-  pause(0.1);
-  play_note(0.15,bb4);
-
-  pause(0.1);
-  play_note(0.5,gb4);
-  pause(0.1);
-  play_note(0.3,eb4);
-  pause(0.1);    
-  play_note(0.15,bb4);
-  pause(0.1);
-  play_note(1,g4);
-  
-  pause(0.1);
-  play_note(0.5,g5);
-  pause(0.1);
-  play_note(0.3,g4);
-  pause(0.1);
-  play_note(0.15,g4);
-  pause(0.1);
-  play_note(0.5,g5);
-  pause(0.1);
-  play_note(0.3,gb5);
-  pause(0.1);
-  play_note(0.15,f5);
-
-  pause(0.1);
-  play_note(0.125,e5);
-  pause(0.03);
-  play_note(0.125,eb5);
-  pause(0.03);
-  play_note(0.25,e5);
+  quarter_note(G4);
+  quarter_note(G4);
+  quarter_note(G4);
+  dotted_eighth_note(DS4);
+  sixteenth_note(AS4);
+  quarter_note(G4);
+  dotted_eighth_note(DS4);
+  sixteenth_note(AS4);
+  half_note(G4);
+  quarter_note(D5);
+  quarter_note(D5);
+  quarter_note(D5);
+  dotted_eighth_note(DS5);
+  sixteenth_note(AS4);
+  quarter_note(FS4);
+  dotted_eighth_note(DS4);
+  sixteenth_note(AS4);
+  half_note(G4);
+  quarter_note(G5);
+  dotted_eighth_note(G4);
+  sixteenth_note(G4);
+  quarter_note(G5);
+  dotted_eighth_note(FS5);
+  sixteenth_note(F5);  
+  sixteenth_note(E5);
+  sixteenth_note(DS5);
+  eighth_note(E5);
   pause(0.25);
-  play_note(0.25,gs4);
-  pause(0.1);
-  play_note(0.5,cs5);
-  pause(0.1);
-  play_note(0.3,c5);
-  pause(0.1);
-  play_note(0.15,b4);
-  pause(0.1);
-  
-  play_note(0.125,bb4);
-  pause(0.03);
-  play_note(0.125,a4);  
-  pause(0.03);
-  play_note(0.25,bb4);
+  eighth_note(GS4);
+  quarter_note(CS5);
+  dotted_eighth_note(C5);
+  sixteenth_note(B4);
+  sixteenth_note(AS4);
+  sixteenth_note(A4);
+  eighth_note(AS4);
   pause(0.25);
-  play_note(0.25,eb4);
-  pause(0.1);
-  play_note(0.5,gb4);
-  pause(0.1);
-  play_note(0.3,eb4);
-  pause(0.1);
-  play_note(0.15,gb4);
-  pause(0.1);
-  play_note(0.5,bb4);
-
-  pause(0.1);
-  play_note(0.3,g4);
-  pause(0.1);
-  play_note(0.15,bb4);
-  pause(0.1);
-  play_note(1,d5);
-
-  pause(0.1);
-  play_note(0.5,g5);
-  pause(0.1);
-  play_note(0.3,g4);
-  pause(0.1);
-  play_note(0.15,g4);
-  pause(0.1);
-  play_note(0.5,g5);
-  pause(0.1);
-  play_note(0.3,gb5);
-  pause(0.1);
-  play_note(0.15,f5);
-
-  pause(0.1);
-  play_note(0.125,e5);
-  pause(0.03);
-  play_note(0.125,eb5);
-  pause(0.03);
-  play_note(0.25,e5);
+  eighth_note(DS4);
+  quarter_note(G4);
+  dotted_eighth_note(DS4);
+  sixteenth_note(G4);
+  quarter_note(AS4);
+  dotted_eighth_note(G4);
+  sixteenth_note(AS4);
+  half_note(D5);
+   quarter_note(G5);
+  dotted_eighth_note(G4);
+  sixteenth_note(G4);
+  quarter_note(G5);
+  dotted_eighth_note(FS5);
+  sixteenth_note(F5);  
+  sixteenth_note(E5);
+  sixteenth_note(DS5);
+  eighth_note(E5);
   pause(0.25);
-  play_note(0.25,gs4);
-  pause(0.1);
-  play_note(0.5,cs5);
-  pause(0.1);
-  play_note(0.3,c5);
-  pause(0.1);
-  play_note(0.15,b4);
-  pause(0.1);
-  
-  play_note(0.125,bb4);
-  pause(0.03);
-  play_note(0.125,a4);  
-  pause(0.03);
-  play_note(0.25,bb4);
+  eighth_note(GS4);
+  quarter_note(CS5);
+  dotted_eighth_note(C5);
+  sixteenth_note(B4);
+  sixteenth_note(AS4);
+  sixteenth_note(A4);
+  eighth_note(AS4);
   pause(0.25);
-  play_note(0.25,eb4);
-  pause(0.1);
-  play_note(0.5,gb4);
-  pause(0.1);
-  play_note(0.3,eb4);
-  pause(0.1);
-  play_note(0.15,gb4);
-  pause(0.1);
-  
-  play_note(0.5,g4);
-  pause(0.1);
-  play_note(0.3,eb4);
-  pause(0.1);
-  play_note(0.15,bb4);
-  pause(0.1);
-  play_note(1,g4);*/
+  eighth_note(DS4);
+  quarter_note(G4);
+  dotted_eighth_note(DS4);
+  sixteenth_note(G4);
+  quarter_note(AS4);
+  dotted_eighth_note(G4);
+  sixteenth_note(AS4);
+  half_note(G4);
 
 
   FILE *musicFile =  fopen("out.wav","w");
