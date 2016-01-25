@@ -6,6 +6,8 @@
 
 char *musicBuffer;
 
+int totalTime = 0;
+
 typedef struct Note_Node
 {
   int frequency;
@@ -82,9 +84,19 @@ int note(int time, float frequency, int amplitude)
   return ((int)(deltaHeight(amplitude,frequency)*time))%amplitude;
 }
 
+void write(int value)
+{
+  if(totalTime % 8000 == 0)
+    {
+      musicBuffer = (char *)realloc(musicBuffer,(totalTime + 8000)*sizeof(char));
+    }
+
+  *(musicBuffer + totalTime) = value;
+  totalTime++;
+}
+
 void play(float length)
 {
-  static int totalTime = 0;
 
   for(int time = 0; time < length*8000; time++)
     {
@@ -97,9 +109,8 @@ void play(float length)
 	  amplitude += note(time,currentNode->frequency / 100, 30);
 	  currentNode = currentNode->next;
 	}
+      write(amplitude);
       
-      *(musicBuffer + totalTime) = amplitude;
-      totalTime++;
     }
 }
 
@@ -107,8 +118,7 @@ int pause(float length)
 {
   for(int time = 0; time < 8000*length; time++)
     {
-      *(musicBuffer + totalTime) = 0;
-      totalTime++;
+      write(0);
     }
 }
 
@@ -170,37 +180,7 @@ void dotted_eighth_note(int frequency)
 int main()
 {
 
-  int bytesOfMusic = 8000*50;
-
-  char *headerBuffer = malloc((44 + bytesOfMusic)*sizeof(char));
-  headerBuffer[0] = 'R';
-  headerBuffer[1] = 'I';
-  headerBuffer[2] = 'F';
-  headerBuffer[3] = 'F';
-  *((uint32_t *) (headerBuffer + 4)) = 40 + bytesOfMusic; // INSERT SIZE HERE LATER
-  headerBuffer[8] = 'W';
-  headerBuffer[9] = 'A';
-  headerBuffer[10] = 'V';
-  headerBuffer[11] = 'E';
-  headerBuffer[12] = 'f';
-  headerBuffer[13] = 'm';
-  headerBuffer[14] = 't';
-  headerBuffer[15] = ' ';
-  *((uint32_t *) (headerBuffer + 16)) = 16;
-  *((uint16_t *) (headerBuffer + 20)) = 1;
-  *((uint16_t *) (headerBuffer + 22)) = 1;
-  *((uint32_t *) (headerBuffer + 24)) = 8000;
-  *((uint32_t *) (headerBuffer + 28)) = 8000;
-  *((uint16_t *) (headerBuffer + 32)) = 1;
-  *((uint16_t *) (headerBuffer + 34)) = 8;
-  headerBuffer[36] = 'd';
-  headerBuffer[37] = 'a';
-  headerBuffer[38] = 't';
-  headerBuffer[39] = 'a';
-  *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
-
-  musicBuffer = headerBuffer + 44;
-
+  musicBuffer = (char *)malloc(8000*sizeof(char));
 
   /* INSERT MUSIC HERE */
   quarter_note(G4);
@@ -275,8 +255,41 @@ int main()
   half_note(G4);
 
 
+  int bytesOfMusic = totalTime;
+
+  char *headerBuffer = (char *)malloc((44 + bytesOfMusic)*sizeof(char));
+  headerBuffer[0] = 'R';
+  headerBuffer[1] = 'I';
+  headerBuffer[2] = 'F';
+  headerBuffer[3] = 'F';
+  *((uint32_t *) (headerBuffer + 4)) = 40 + bytesOfMusic; // INSERT SIZE HERE LATER
+  headerBuffer[8] = 'W';
+  headerBuffer[9] = 'A';
+  headerBuffer[10] = 'V';
+  headerBuffer[11] = 'E';
+  headerBuffer[12] = 'f';
+  headerBuffer[13] = 'm';
+  headerBuffer[14] = 't';
+  headerBuffer[15] = ' ';
+  *((uint32_t *) (headerBuffer + 16)) = 16;
+  *((uint16_t *) (headerBuffer + 20)) = 1;
+  *((uint16_t *) (headerBuffer + 22)) = 1;
+  *((uint32_t *) (headerBuffer + 24)) = 8000;
+  *((uint32_t *) (headerBuffer + 28)) = 8000;
+  *((uint16_t *) (headerBuffer + 32)) = 1;
+  *((uint16_t *) (headerBuffer + 34)) = 8;
+  headerBuffer[36] = 'd';
+  headerBuffer[37] = 'a';
+  headerBuffer[38] = 't';
+  headerBuffer[39] = 'a';
+  *((uint32_t *) (headerBuffer + 40)) = bytesOfMusic; //CALCULATE SIZE HERE
+
+
+
+
   FILE *musicFile =  fopen("out.wav","w");
-  fwrite(headerBuffer, sizeof(char), bytesOfMusic + 44, musicFile);
+  fwrite(headerBuffer, sizeof(char), 44, musicFile);
+  fwrite(musicBuffer, sizeof(char), bytesOfMusic, musicFile);
   fclose(musicFile);
 
   free(headerBuffer);
