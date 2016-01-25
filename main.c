@@ -5,7 +5,6 @@
 #include "notes.h"
 
 char *musicBuffer;
-int totalTime = 0;
 
 typedef struct Note_Node
 {
@@ -85,6 +84,8 @@ int note(int time, float frequency, int amplitude)
 
 void play(float length)
 {
+  static int totalTime = 0;
+
   for(int time = 0; time < length*8000; time++)
     {
       char amplitude = 0;
